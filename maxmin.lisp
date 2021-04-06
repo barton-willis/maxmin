@@ -69,12 +69,10 @@
               (throw 'done t))))))
 
 ;; Return true if y is the additive inverse of x. 
-
 (defun add-inversep (x y)
   (eq t (meqp x (neg y))))
 
 ;; Define a simplim%function to handle a limit of $max.
-
 (defprop $max simplim$max simplim%function)
 
 (defun simplim$max (expr var val)
@@ -87,10 +85,11 @@
 
 (defprop $max simp-max operators)
 
-
+;; True iff e is a GRE expresion of the form max(...)
 (defun max-p (e)
   (and (consp e) (eq (caar e) '$max)))
 
+; True iff e is a GRE expresion of the form min(...)
 (defun min-p (e)
   (and (consp e) (eq (caar e) '$min)))
 
@@ -127,14 +126,14 @@
     
     (dolist (x l)
       (catch 'done
-	(dolist (ai acc)
-	  (setq sgn ($compare x ai))
-	  (cond ((member sgn '(">" ">=") :test #'equal)
-		 (setq acc (delete ai acc :test #'eq)))
-		((eq sgn '$notcomparable) (setq issue-warning t))
-		((member sgn '("<" "=" "<=") :test #'equal)
-		 (throw 'done t))))
-             (push x acc)))
+      	(dolist (ai acc)
+	         (setq sgn ($compare x ai))
+	         (cond ((member sgn '(">" ">=") :test #'equal)
+		              (setq acc (delete ai acc :test #'eq)))
+	              	((eq sgn '$notcomparable) (setq issue-warning t))
+	              	((member sgn '("<" "=" "<=") :test #'equal)
+		              (throw 'done t))))
+          (push x acc)))
     
     ;; Fourth, when when maxmin_effort is 2 or higher and e and -e are members of acc, replace e by |e|.
     
@@ -188,8 +187,6 @@
   (cons '($min) (mapcar #'(lambda (e) (limit e var val 'think)) (cdr expr))))
 
 (defprop $min simp-min operators)
-
-
 
 (defun simp-min (l tmp z)
   (declare (ignore tmp))
