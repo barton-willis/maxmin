@@ -203,11 +203,13 @@
             (t
               (push li acc))))
     (setq l (mapcar #'limitneg acc))
-    (setq l (simplifya (cons '($max) l) t)) 
+    (setq l (simplifya (cons '($max) l) t))
+    ;; Is the sort needed? I think so, but need a test that requires sorting...
     (if (max-p l)
-      (cons (list '$min 'simp) (mapcar  #'limitneg (cdr l))) (limitneg l))))
+      (cons (list '$min 'simp) (sort (mapcar  #'limitneg (cdr l)) '$orderless)) 
+        (limitneg l))))
 
-
+ (sort acc '$orderlessp)
 ;; Several functions (derivdegree for example) use the maximin function. Here is 
 ;; a replacement that uses simp-min or simp-max.
 
