@@ -209,7 +209,6 @@
       (cons (list '$min 'simp) (sort (mapcar  #'limitneg (cdr l)) '$orderless)) 
         (limitneg l))))
 
- (sort acc '$orderlessp)
 ;; Several functions (derivdegree for example) use the maximin function. Here is 
 ;; a replacement that uses simp-min or simp-max.
 
