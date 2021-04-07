@@ -206,7 +206,7 @@
     (setq l (simplifya (cons '($max) l) t))
     ;; Is the sort needed? I think so, but need a test that requires sorting...
     (if (max-p l)
-      (cons (list '$min 'simp) (sort (mapcar  #'limitneg (cdr l)) '$orderless)) 
+      (cons (list '$min 'simp) (sort (mapcar  #'limitneg (cdr l)) '$orderlessp)) 
         (limitneg l))))
 
 ;; Several functions (derivdegree for example) use the maximin function. Here is 
