@@ -35,7 +35,7 @@
 (defprop $max $max verb)
 (defprop $min $min verb)
 
-(defmvar $minmax_simplifications (take '(mlist) '$basic))
+(defmvar $minmax_simplifications (take '(mlist) '$basic '$abs '$between))
 (defun minmax-simplifications-assign (xx y)
   (declare (ignore xx))
   (cond ((and (listp y) (every #'symbolp (cdr y)))
@@ -43,7 +43,7 @@
         (t 
           (merror (intl:gettext "The value of minmax_simplifications must be a list of symbols; found ~M ~%") y))))
 
-(defprop $maxmin_effort  maxima-effort-assign assign)
+(defprop $minmax_simplifications maxima-effort-assign assign)
 ;; Return true if there is pi in the CL list p and qi in the CL lisp q such that
 ;; x is between pi and qi.  This means that either pi <= x <= qi or
 ;; qi <= x <= pi. For example, 2x is between x and 3x.
@@ -78,10 +78,6 @@
 (defun simplim$max (expr var val)
   (cons '($max) (mapcar #'(lambda (e) (limit e var val 'think)) (cdr expr))))
 
-;; When maxmin_effort is two or greater, max and min try additional 
-;; O(n^2) and O(n^3) methods.
- 
-;; Undone:  max(1-x,1+x) - max(x,-x) --> 1.
 
 (defprop $max simp-max operators)
 
@@ -93,11 +89,13 @@
 (defun min-p (e)
   (and (consp e) (eq (caar e) '$min)))
 
+;; Undone:  max(1-x,1+x) - max(x,-x) --> 1.
+
 (defvar *calls-to-simp-max* 0)
 (defun simp-max (l tmp z)
   (incf *calls-to-simp-max* 1)
   (let ((acc nil) (sgn) (num-max nil) (issue-warning))
-    (setq l (margs (specrepcheck l)))
+    (setq l (cdr (specrepcheck l)))
     (dolist (li l)
       (setq li (simplifya li z))
       (cond ((max-p li)
@@ -129,13 +127,14 @@
       	(dolist (ai acc)
 	         (setq sgn ($compare x ai))
 	         (cond ((member sgn '(">" ">=") :test #'equal)
-		              (setq acc (delete ai acc :test #'eq)))
+		               (setq acc (delete ai acc :test #'eq)))
 	              	((eq sgn '$notcomparable) (setq issue-warning t))
 	              	((member sgn '("<" "=" "<=") :test #'equal)
-		              (throw 'done t))))
+		                (throw 'done t))))
           (push x acc)))
     
-    ;; Fourth, when when maxmin_effort is 2 or higher and e and -e are members of acc, replace e by |e|.
+    ;; Fourth, when $abs is a member of $minmax_simplifications and e and -e are members 
+    ;; of acc, replace e and -e by |e|.
     
     (cond ((member '$abs (cdr $minmax_simplifications))
            (let ((flag nil))
@@ -153,8 +152,8 @@
                  (return-from simp-max (simplify (cons '($max) sgn)))
                  (setq acc sgn)))))
  
-    ;; Fifth, when maxmin_effort is 3 or higher and issue-warning is false, try the
-    ;; betweenp simplification.
+    ;; Fifth, when $between is a member of  $minmax_simplifications and issue-warning 
+    ;; is false, try the betweenp simplification.
 
     (cond ((and (not issue-warning) (member '$between (cdr $minmax_simplifications)))
 	   (setq l nil)
