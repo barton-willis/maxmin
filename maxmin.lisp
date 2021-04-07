@@ -106,7 +106,6 @@
     ;; First, delete duplicate members of l.
     (setq l (sorted-remove-duplicates (sort acc '$orderlessp)))
     (setq acc nil)
-    
     ;; Second, find the largest real number in l. Since (mnump '$%i) --> false, we don't 
     ;; have to worry that num-max is complex. 
     
@@ -114,7 +113,6 @@
       (if (mnump li) (setq num-max (if (or (null num-max) (mgrp li num-max)) li num-max)) (push li acc)))
     (setq l acc)
     (setq acc (if (null num-max) num-max (list num-max)))
-    
     ;; Third, accumulate the maximum in the list acc. For each x in l, do:
     
     ;; (a) if x is > or >= every member of acc, set acc to (x),
@@ -126,6 +124,7 @@
       (catch 'done
       	(dolist (ai acc)
 	         (setq sgn ($compare x ai))
+           (print `(sgn = ,sgn))
 	         (cond ((member sgn '(">" ">=") :test #'equal)
 		               (setq acc (delete ai acc :test #'eq)))
 	              	((eq sgn '$notcomparable) (setq issue-warning t))
@@ -243,16 +242,16 @@
         ((or (not (lenient-extended-realp a))
              (not (lenient-extended-realp b)))
          '$notcomparable)
-	(t
-	 (let ((sgn (csign (specrepcheck (sub a b)))))
-	   (cond ((eq sgn '$neg) "<")
-		 ((eq sgn '$nz) "<=")
-		 ((eq sgn '$zero) "=")
-		 ((eq sgn '$pz) ">=")
-		 ((eq sgn '$pos) ">")
-		 ((eq sgn '$pn) "#")
-		 ((eq sgn '$pnz) '$unknown)
-		 (t '$unknown))))))
+      	(t
+	         (let ((sgn (csign (specrepcheck (sub a b)))))
+	             (cond ((eq sgn '$neg) "<")
+          		 ((eq sgn '$nz) "<=")
+          		 ((eq sgn '$zero) "=")
+          		 ((eq sgn '$pz) ">=")
+	          	 ((eq sgn '$pos) ">")
+	          	 ((eq sgn '$pn) "#")
+	          	 ((eq sgn '$pnz) '$unknown)
+	          	 (t '$unknown))))))
 
 ;; When it's fairly likely that the real domain of e is nonempty, return true; 
 ;; otherwise, return false. Even if z has been declared complex, the real domain
