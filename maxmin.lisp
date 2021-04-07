@@ -195,11 +195,11 @@
     (setq l (cdr (specrepcheck l)))
     (dolist (li l)
       (setq li (simplifya li z)) 
+      ;; convert min(a, min(b,c)) --> min(a,b,c)
       (cond ((min-p li)
               (setq acc (append acc (cdr li))))
             (t
               (push li acc))))
-    (setq l acc)
     (setq l (mapcar #'limitneg acc))
     (setq l (simplify (cons '($max) l)))
     (if (max-p l)
