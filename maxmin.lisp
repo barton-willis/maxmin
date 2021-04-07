@@ -171,11 +171,14 @@
           ((null (cdr acc)) (car acc))
           (t  `(($max simp) ,@(sort acc '$orderlessp))))))
 
+;; Return -x, but check for the special cases x = inf, minf, und, ind, infinity.
+;; Also locally set negdistrib to true (this is what the function neg does)
+;; To catch more cases, replace this function body with ($limit (mul -1 x)).
 (defun limitneg (x)
   (cond ((eq x '$minf) '$inf)
       	((eq x '$inf) '$minf)
 	      ((member x '($und $ind $infinity) :test #'eq) x)
-      	(t (neg x))))
+      	(t (let (($negdistrib t)) (mul -1 x)))))
 
 ;; Define a simplim%function to handle a limit of $min.
 
