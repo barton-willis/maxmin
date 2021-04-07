@@ -174,6 +174,7 @@
 ;; Return -x, but check for the special cases x = inf, minf, und, ind, infinity.
 ;; Also locally set negdistrib to true (this is what the function neg does)
 ;; To catch more cases, replace this function body with ($limit (mul -1 x)).
+;; But ($limit (mul -1 x)) misses the case -ind --> ind & $limit can be spendy. 
 (defun limitneg (x)
   (cond ((eq x '$minf) '$inf)
       	((eq x '$inf) '$minf)
