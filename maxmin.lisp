@@ -174,9 +174,9 @@
 
 (defun limitneg (x)
   (cond ((eq x '$minf) '$inf)
-	((eq x '$inf) '$minf)
-	((member x '($und $ind $infinity) :test #'eq) x)
-	(t (neg x))))
+      	((eq x '$inf) '$minf)
+	      ((member x '($und $ind $infinity) :test #'eq) x)
+      	(t (neg x))))
 
 ;; Define a simplim%function to handle a limit of $min.
 
