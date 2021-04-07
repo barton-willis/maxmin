@@ -189,6 +189,8 @@
 
 (defprop $min simp-min operators)
 
+;; The function simp-min mostly piggy-backs onto simp-max. That is, we use
+;; min(a,b,...) = -max(-a,-b,...).
 (defun simp-min (l tmp z)
   (declare (ignore tmp))
   (let ((acc nil))
@@ -201,7 +203,7 @@
             (t
               (push li acc))))
     (setq l (mapcar #'limitneg acc))
-    (setq l (simplify (cons '($max) l)))
+    (setq l (simplifya (cons '($max) l) t)) 
     (if (max-p l)
       (cons (list '$min 'simp) (mapcar  #'limitneg (cdr l))) (limitneg l))))
 
