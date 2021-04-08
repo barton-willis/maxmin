@@ -244,20 +244,19 @@
              (amongl '($infinity $ind $und) b))
          ;; Expressions with $infinity, $ind, or $und are not comparable
          '$notcomparable)
-        ((eq t (meqp a b)) "=")
-        ((or (not (lenient-extended-realp a))
-             (not (lenient-extended-realp b)))
-         '$notcomparable)
-      	(t
-	         (let ((sgn (csign (specrepcheck (sub a b)))))
-	             (cond ((eq sgn '$neg) "<")
-          		 ((eq sgn '$nz) "<=")
-          		 ((eq sgn '$zero) "=")
-          		 ((eq sgn '$pz) ">=")
-	          	 ((eq sgn '$pos) ">")
-	          	 ((eq sgn '$pn) "#")
-	          	 ((eq sgn '$pnz) '$unknown)
-	          	 (t '$unknown))))))
+	((eq a b) "=")			; Quick check
+	(t (let ((sgn (csign (specrepcheck (sub a b)))))
+	     (cond ((eq sgn '$zero) "=")
+		   ((or (not (lenient-extended-realp a))
+			(not (lenient-extended-realp b)))
+		    '$notcomparable)
+		   ((eq sgn '$neg) "<")
+		   ((eq sgn '$nz) "<=")
+		   ((eq sgn '$pz) ">=")
+		   ((eq sgn '$pos) ">")
+		   ((eq sgn '$pn) "#")
+		   ((eq sgn '$pnz) '$unknown)
+		   (t '$unknown))))))
 
 ;; When it's fairly likely that the real domain of e is nonempty, return true; 
 ;; otherwise, return false. Even if z has been declared complex, the real domain
