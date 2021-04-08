@@ -43,7 +43,7 @@
         (t 
           (merror (intl:gettext "The value of minmax_simplifications must be a list of symbols; found ~M ~%") y))))
 
-(defprop $minmax_simplifications maxima-effort-assign assign)
+(defprop $minmax_simplifications minmax-simplifications-assign assign)
 ;; Return true if there is pi in the CL list p and qi in the CL lisp q such that
 ;; x is between pi and qi.  This means that either pi <= x <= qi or
 ;; qi <= x <= pi. For example, 2x is between x and 3x.
