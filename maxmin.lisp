@@ -35,15 +35,15 @@
 (defprop $max $max verb)
 (defprop $min $min verb)
 
-(defmvar $minmax_simplifications (take '(mlist) '$basic '$abs '$between))
-(defun minmax-simplifications-assign (xx y)
+(defmvar $maxmin_effort 12)
+(defun maxmin_effort-assign (xx y)
   (declare (ignore xx))
-  (cond ((and (listp y) (every #'symbolp (cdr y)))
-         (setq $minmax_simplifications y))
+  (cond ((and (integerp y) (> y -1))
+          (setq $maxmin_effort y))
         (t 
-          (merror (intl:gettext "The value of minmax_simplifications must be a list of symbols; found ~M ~%") y))))
+          (merror (intl:gettext "The value of maxmin_effort must be a nonnegative integer; found ~M ~%") y))))
 
-(defprop $minmax_simplifications minmax-simplifications-assign assign)
+(defprop $maxmin_effort maxmin_effort-assign assign)
 ;; Return true if there is pi in the CL list p and qi in the CL lisp q such that
 ;; x is between pi and qi.  This means that either pi <= x <= qi or
 ;; qi <= x <= pi. For example, 2x is between x and 3x.
@@ -55,10 +55,7 @@
 ;; max(x^2,x^4,x^6,x^2+1) (standard simplification) --> max(x^4,x^6,x^2+1) 
 ;; (betweenp) --> max(x^4,x^6,x^2+1). If the betweenp simplification were done 
 ;; first, we'd have max(x^2,x^4,x^6,x^2+1) --> max(x^2,x^6,x^2+1) --> max(x^6,x^2+1).
-
-(defvar *betweenp* 0)
 (defun betweenp (x p q)
-  (incf *betweenp* 1)
   (catch 'done
       (dolist (pk p)
 	      (dolist (qk q)
@@ -91,94 +88,107 @@
 
 ;; Undone:  max(1-x,1+x) - max(x,-x) --> 1.
 
-(defvar *calls-to-simp-max* 0)
 (defun simp-max (l tmp z)
-  (incf *calls-to-simp-max* 1)
+  (declare (ignore tmp))
   (let ((acc nil) (sgn) (num-max nil) (issue-warning))
     (setq l (cdr (specrepcheck l)))
-    (dolist (li l)
-      (setq li (simplifya li z))
-      (cond ((max-p li)
-             (setq acc (append acc (cdr li))))
+
+    ;; When maxmin_effort > 0, simplify each member of l and flatten (that is, do
+    ;; max(a,max(a,b)) -> max(a,b,c)). The effort for this step is O(n).
+    (when (> $maxmin_effort 0)
+      (dolist (li l)
+          (setq li (simplifya (specrepcheck li) z))
+          (cond 
+            ((max-p li)
+              (setq acc (append acc (cdr li))))
             (t  
-             (push li acc))))
+              (push li acc))))
+      (setq l acc))
+
+    ;(mtell "at 1:  l = ~M ~%" (cons '(mlist) l))
+    ;; Find the largest real number in l. Since (mnump '$%i) --> false, we don't 
+    ;; have to worry that num-max is complex. The effort for this step is O(n).  
+    (when (> $maxmin_effort 0)
+      (setq acc nil)         
+      (dolist (li l)
+         (if (mnump li) 
+         (setq num-max (if (or (null num-max) (mgrp li num-max)) li num-max)) (push li acc)))
+      
+      (when num-max
+        (push num-max acc))
+      (setq l acc))
+
+    ;(mtell "at 2:  l = ~M ~%" (cons '(mlist) l))
+    ;; Sort and remove duplicates.  The effort for this step is O(n logn)).  
+    (when (> $maxmin_effort 0)  
+      (setq l (sorted-remove-duplicates (sort l '$orderlessp))))
+
+     ;(mtell "at 3:  l = ~M ~%" (cons '(mlist) l))
+    ;; When maxmin_effort > 2, if e and -e are members of l, replace e & -e by
+    ;; abs(e).     
+    (when (> $maxmin_effort 2)
+        (let ((pp) (qq) (nn))
+          (setq pp (simplifya (cons '($set) l) t))
+          (setq qq (simplifya (cons '($set) (mapcar #'limitneg l)) t))
+          (setq nn ($intersection pp qq))
+          (setq pp ($setdifference pp nn))
+          (when (not ($emptyp nn))
+              (setq nn (mapcar #'(lambda (s) (take '(mabs) s)) (cdr nn)))
+              (setq nn (simplifya (cons '($set) nn) t))
+              (setq pp ($union pp nn)))
+          (setq l (cdr pp))))
     
-    ;; First, delete duplicate members of l.
-    (setq l (sorted-remove-duplicates (sort acc '$orderlessp)))
-    (setq acc nil)
-    ;; Second, find the largest real number in l. Since (mnump '$%i) --> false, we don't 
-    ;; have to worry that num-max is complex. 
-    
-    (dolist (li l)
-      (if (mnump li) (setq num-max (if (or (null num-max) (mgrp li num-max)) li num-max)) (push li acc)))
-    (setq l acc)
-    (setq acc (if (null num-max) num-max (list num-max)))
-    ;; Third, accumulate the maximum in the list acc. For each x in l, do:
-    
+    ;(mtell "at 4:  l = ~M ~%" (cons '(mlist) l))
+    ;; Accumulate the maximum in the list acc. For each x in l, do:
     ;; (a) if x is > or >= every member of acc, set acc to (x),
     ;; (b) if x is < or <= to some member of acc, do nothing,
     ;; (c) if neither 'a' or 'b', push x into acc,
     ;; (d) if x cannot be compared to some member of acc, set issue-warning to true.
-    
-    (dolist (x l)
-      (catch 'done
-      	(dolist (ai acc)
-	         (setq sgn ($compare x ai))
-	         (cond ((member sgn '(">" ">=") :test #'equal)
-		               (setq acc (delete ai acc :test #'eq)))
-	              	((eq sgn '$notcomparable) (setq issue-warning t))
-	              	((member sgn '("<" "=" "<=") :test #'equal)
-		                (throw 'done t))))
-          (push x acc)))
-    
-    ;; Fourth, when $abs is a member of $minmax_simplifications and e and -e are members 
-    ;; of acc, replace e and -e by |e|.
-    
-    (cond ((member '$abs (cdr $minmax_simplifications))
-           (let ((flag nil))
-             (setq sgn nil)
-             (dolist (ai acc)
-               (setq tmp (if (lenient-realp ai)
-                             (member-if #'(lambda (s) (add-inversep ai s)) sgn)
-                             nil))
-               (cond (tmp
-                      (setf (car tmp) (take '(mabs) ai))
-                      (setq flag t))
-                     (t (push ai sgn))))
-             (if flag
-                 ;; We have replaced -e and e with |e|. Call simp-max again.
-                 (return-from simp-max (simplify (cons '($max) sgn)))
-                 (setq acc sgn)))))
- 
-    ;; Fifth, when $between is a member of  $minmax_simplifications and issue-warning 
-    ;; is false, try the betweenp simplification.
+    (when (> $maxmin_effort 1)
+      (setq acc nil)
+      (dolist (x l)
+        (catch 'done
+          (dolist (ai acc)
+	            (setq sgn ($compare x ai))
+	            (cond ((member sgn '(">" ">=") :test #'equal)
+		                    (setq acc (delete ai acc :test #'eq)))
+	                  ((eq sgn '$notcomparable) (setq issue-warning t))
+	                  ((member sgn '("<" "=" "<=") :test #'equal)
+		                  (throw 'done t))))
+               (push x acc)))
+    (setq l acc))
+  
+    ;(mtell "at 5:  l = ~M ~%" (cons '(mlist) l))
+    ;; When issue-warning is false and maxmin_effort > 2 , use the betweenp 
+    ;; simplification.
+    (when (and (not issue-warning) (> $maxmin_effort 2))
+	    (setq acc nil)
+	    (setq sgn (cdr l))
+	    (dolist (ai l)
+	      (when (not (betweenp ai sgn sgn)) 
+           (push ai acc))
+	      (setq sgn `(,@(cdr sgn) ,ai)))
+	    (setq l acc))
 
-    (cond ((and (not issue-warning) (member '$between (cdr $minmax_simplifications)))
-	   (setq l nil)
-	   (setq sgn (cdr acc))
-	   (dolist (ai acc)
-	     (when (not (betweenp ai sgn sgn)) 
-          (push ai l))
-	     (setq sgn `(,@(cdr sgn) ,ai)))
-	   (setq acc l)))
+    ;(mtell "at 6:  l = ~M ~%" (cons '(mlist) l))  
+    ;; Finally, do a few clean ups:    
+    (setq l (if (not issue-warning) (delete '$minf l) l))
+    (cond ((null l) '$minf) ;max(emptyset) -> minf.
+          ((and (not issue-warning) (member '$inf l :test #'eq)) '$inf)
+          ((null (cdr l)) (car l)) ;singleton case: max(xx) --> xx
+          (t  `(($max simp) ,@(sort l '$orderlessp)))))) ;nouform return.
 
-    ;; Finally, do a few clean ups:
-    
-    (setq acc (if (not issue-warning) (delete '$minf acc) acc))
-    (cond ((null acc) '$minf)
-          ((and (not issue-warning) (member '$inf acc :test #'eq)) '$inf)
-          ((null (cdr acc)) (car acc))
-          (t  `(($max simp) ,@(sort acc '$orderlessp))))))
+;; Return -x, but check for the special cases x = inf, minf, und, ind, and infinity.
+;; Also locally set negdistrib to true (this is what the function neg does). We could
+;; do -zeroa -> zerob and -zerob -> zeroa, I suppose. 
 
-;; Return -x, but check for the special cases x = inf, minf, und, ind, infinity.
-;; Also locally set negdistrib to true (this is what the function neg does)
 ;; To catch more cases, replace this function body with ($limit (mul -1 x)).
-;; But ($limit (mul -1 x)) misses the case -ind --> ind & $limit can be spendy. 
+;; But ($limit (mul -1 x)) misses the case -ind --> ind & limit can be costly. 
 (defun limitneg (x)
-  (cond ((eq x '$minf) '$inf)
-      	((eq x '$inf) '$minf)
-	      ((member x '($und $ind $infinity) :test #'eq) x)
-      	(t (let (($negdistrib t)) (mul -1 x)))))
+  (cond ((eq x '$minf) '$inf) ; -minf -> inf
+      	((eq x '$inf) '$minf) ; -inf -> minf
+	      ((member x '($und $ind $infinity) :test #'eq) x) ;-und -> und, and ...
+      	(t (let (($negdistrib t)) (mul -1 x))))) ; x -> -x
 
 ;; Define a simplim%function to handle a limit of $min.
 
