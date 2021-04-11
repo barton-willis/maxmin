@@ -2,7 +2,7 @@
 @anchor{max}
 @deffn {Function} max (@var{x_1}, @dots{}, @var{x_n})
 
-Return a simplified value for the maximum of the expressions @var{x_1} through
+Return a simplified value for the numerical maximum of the expressions @var{x_1} through
 @var{x_n}. For an empty arument list, @code{max} yields @code{minf}.
 
 The option variable @code{maxmin_effort} controls which simplication methods are applied.
