@@ -22,7 +22,7 @@ See also @mref{min}, @mrefdot{lmax}, and @mrefdot{lmin}.
 
 @b{Examples:}
 
-In the first example, setting @code{maxmin_effort} to zero suppresses all simplifcation.
+In the first example, setting @code{maxmin_effort} to zero suppresses simplifcation.
 @example
 (%i1)	block([maxmin_effort : 0], max(1,2,x,x, max(a,b)));
 (%o1)	max(1,2,max(a,b),x,x)
@@ -40,8 +40,8 @@ When @code{maxmin_effort} is two or more, @code{max} compares pairs of members:
 (%o2)	x+3
 @end example
 
-Finally, when @code{maxmin_effort} is three or more, @code{max} compares triples members and
-excludes those that are in between; for example
+Finally, when @code{maxmin_effort} is three or more, @code{max} compares triples 
+members and excludes those that are in between; for example
 @example
 (%i1)	block([maxmin_effort : 4], max(x, 2*x, 3*x, 4*x));
 (%o1)	max(x,4*x)
