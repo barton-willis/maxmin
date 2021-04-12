@@ -91,7 +91,7 @@
 (defun simp-max (l tmp z)
   (declare (ignore tmp))
   (let ((acc nil) (sgn) (num-max nil) (issue-warning))
-    (setq l (cdr (specrepcheck l)))
+    (setq l (cdr  l))
 
     ;; When maxmin_effort > 0, simplify each member of l and flatten (that is, do
     ;; max(a,max(a,b)) -> max(a,b,c)). The effort for this step is O(n).
@@ -150,6 +150,7 @@
         (catch 'done
           (dolist (ai acc)
 	            (setq sgn ($compare x ai))
+             ;; (print `(sgn = ,sgn))
 	            (cond ((member sgn '(">" ">=") :test #'equal)
 		                    (setq acc (delete ai acc :test #'eq)))
 	                  ((eq sgn '$notcomparable) (setq issue-warning t))
@@ -204,9 +205,9 @@
 (defun simp-min (l tmp z)
   (declare (ignore tmp))
   (let ((acc nil))
-    (setq l (cdr (specrepcheck l)))
+    (setq l (cdr l))
     (dolist (li l)
-      (setq li (simplifya li z)) 
+      (setq li (simplifya (specrepcheck li) z)) 
       ;; convert min(a, min(b,c)) --> min(a,b,c)
       (cond ((min-p li)
               (setq acc (append acc (cdr li))))
@@ -246,15 +247,24 @@
 
 (defmfun $compare (a b)
   ;; Simplify expressions with infinities, indeterminates, or infinitesimals
+  (print "top of compare")
   (when (amongl '($ind $und $inf $minf $infinity $zeroa $zerob) a)
     (setq a ($limit a)))
   (when (amongl '($ind $und $inf $minf $infinity $zeroa $zerob) b)
     (setq b ($limit b)))
+
+  (when (eq a b)
+    (mtell "Equal a = ~M  b = ~M ~%" a b))
+
+(when (eq t (meqp a b))
+    (mtell "Meqp a = ~M  b = ~M ~%" a b))
+
   (cond ((or (amongl '($infinity $ind $und) a)
              (amongl '($infinity $ind $und) b))
          ;; Expressions with $infinity, $ind, or $und are not comparable
          '$notcomparable)
 	((eq a b) "=")			; Quick check
+  ((eq t (meqp a b)) "=") ;less quick check--does a rectform?
 	(t (let ((sgn (csign (specrepcheck (sub a b)))))
 	     (cond ((eq sgn '$zero) "=")
 		   ((or (not (lenient-extended-realp a))
