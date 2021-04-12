@@ -245,27 +245,28 @@
 ;; I think compare(asin(x), asin(x) + 1) should evaluate to < without
 ;; being quizzed about the sign of x. Thus the call to lenient-extended-realp.
 
+(defvar *quick* 0)
+(defvar *slow* 0)
+(defvar *compare* 0)
 (defmfun $compare (a b)
+  (incf *compare* 1)
   ;; Simplify expressions with infinities, indeterminates, or infinitesimals
-  (print "top of compare")
+  ;(print "top of compare")
   (when (amongl '($ind $und $inf $minf $infinity $zeroa $zerob) a)
     (setq a ($limit a)))
   (when (amongl '($ind $und $inf $minf $infinity $zeroa $zerob) b)
     (setq b ($limit b)))
 
-  (when (eq a b)
-    (mtell "Equal a = ~M  b = ~M ~%" a b))
-
-(when (eq t (meqp a b))
-    (mtell "Meqp a = ~M  b = ~M ~%" a b))
-
+  
   (cond ((or (amongl '($infinity $ind $und) a)
              (amongl '($infinity $ind $und) b))
          ;; Expressions with $infinity, $ind, or $und are not comparable
          '$notcomparable)
-	      ((or (eq a b) (eq t (meqp a b))) "=")			; Quick check
+
+        
+	      ((eq a b)) "=")	; Quick check for equality
  	      (t (let ((sgn (csign (specrepcheck (sub a b)))))
-	          (cond ((eq sgn '$zero) "=")
+	          (cond 
 		              ((or (not (lenient-extended-realp a))
 		                  	(not (lenient-extended-realp b)))
 		                '$notcomparable)
@@ -275,6 +276,9 @@
 		              ((eq sgn '$pos) ">")
 		              ((eq sgn '$pn) "#")
 		              ((eq sgn '$pnz) '$unknown)
+                  ;; Apparently, meqp uses something like rectform to look for equality,
+                  ;; but csign doesn't use this check. We'll do both?
+                  ((or (eq sgn '$zero) (meqp a b)) "=")
 		              (t '$unknown))))))
 
 ;; When it's fairly likely that the real domain of e is nonempty, return true; 
