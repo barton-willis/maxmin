@@ -78,11 +78,11 @@
 
 (defprop $max simp-max operators)
 
-;; True iff e is a GRE expresion of the form max(...)
+;; True iff e is a GRE expression of the form max(...)
 (defun max-p (e)
   (and (consp e) (eq (caar e) '$max)))
 
-; True iff e is a GRE expresion of the form min(...)
+; True iff e is a GRE expression of the form min(...)
 (defun min-p (e)
   (and (consp e) (eq (caar e) '$min)))
 
