@@ -250,35 +250,42 @@
 (defvar *compare* 0)
 (defmfun $compare (a b)
   (incf *compare* 1)
+
+  ;(when (eq a b)
+  ;  (incf *quick*)
+  ;  (mtell "eq case! a = ~M b = ~M ~%" a b)
+  ;  (print `(a = ,a b = ,b))
+  ;  (print "-------------------"))
+
   ;; Simplify expressions with infinities, indeterminates, or infinitesimals
   ;(print "top of compare")
   (when (amongl '($ind $und $inf $minf $infinity $zeroa $zerob) a)
     (setq a ($limit a)))
   (when (amongl '($ind $und $inf $minf $infinity $zeroa $zerob) b)
     (setq b ($limit b)))
-
   
-  (cond ((or (amongl '($infinity $ind $und) a)
+  (cond 
+        ((eq a b) "=")	; Quick check for equality
+        ((or (amongl '($infinity $ind $und) a)
              (amongl '($infinity $ind $und) b))
          ;; Expressions with $infinity, $ind, or $und are not comparable
          '$notcomparable)
-
-        
-	      ((eq a b)) "=")	; Quick check for equality
+	      ;((eq a b) "=")	; Quick check for equality
+        ;((alike1 a b) "=")	; Quick check for equality
+        ;((eq t (meqp a b)) "=")
  	      (t (let ((sgn (csign (specrepcheck (sub a b)))))
 	          (cond 
 		              ((or (not (lenient-extended-realp a))
-		                  	(not (lenient-extended-realp b)))
+		                   (not (lenient-extended-realp b)))
 		                '$notcomparable)
 		              ((eq sgn '$neg) "<")
 		              ((eq sgn '$nz) "<=")
 		              ((eq sgn '$pz) ">=")
 		              ((eq sgn '$pos) ">")
 		              ((eq sgn '$pn) "#")
-		              ((eq sgn '$pnz) '$unknown)
                   ;; Apparently, meqp uses something like rectform to look for equality,
                   ;; but csign doesn't use this check. We'll do both?
-                  ((or (eq sgn '$zero) (meqp a b)) "=")
+                  ((or (eq sgn '$zero) (eq t (meqp a b))) "=")
 		              (t '$unknown))))))
 
 ;; When it's fairly likely that the real domain of e is nonempty, return true; 
