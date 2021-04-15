@@ -35,7 +35,7 @@
 (defprop $max $max verb)
 (defprop $min $min verb)
 
-(defmvar $maxmin_effort 12)
+(defmvar $maxmin_effort 10)
 (defun maxmin_effort-assign (xx y)
   (declare (ignore xx))
   (cond ((and (integerp y) (> y -1))
@@ -49,19 +49,27 @@
 ;; qi <= x <= pi. For example, 2x is between x and 3x.
 
 ;; Strangely, sign((a-b)*(b-a)) --> pnz but sign(expand((a-b)*(b-a))) --> nz.
-;; This is the reason for the $expand.
+;; To workaround this weirdness, we could call expand instead of factor on 
+;; (mul (sub x pk) (sub qk x))), but let's not do that.
 
 ;; The betweenp simplification is done last; this has some interesting effects:
 ;; max(x^2,x^4,x^6,x^2+1) (standard simplification) --> max(x^4,x^6,x^2+1) 
 ;; (betweenp) --> max(x^4,x^6,x^2+1). If the betweenp simplification were done 
 ;; first, we'd have max(x^2,x^4,x^6,x^2+1) --> max(x^2,x^6,x^2+1) --> max(x^6,x^2+1).
+
+;; The function $factor refuses to factor an expression that has an exponent that
+;; exceeds factor_max_degree. I think this is a better heuristic than the conssize
+;; method used by factor-if-small (defined in compar.lisp). So let's use $factor, not
+;; factor-if-small. We could locally set the value of factor_max_degree, but let's not.
+
+;; Removing factor from (csign ($factor (mul (sub x pk) (sub qk x))) causes max
+;; to miss the simplification max(x^2,x^4,x^6) --> max(x^2, x^4). Arguably, csign
+;; should be more semantically neutral--until it is, let's keep factor in here.
 (defun betweenp (x p q)
   (catch 'done
       (dolist (pk p)
 	      (dolist (qk q)
-	       ;  (when (member (csign ($expand (mul (sub x pk) (sub qk x)))) 
-         ;  (when (member (csign (mul (factor-if-small (sub x pk)) (factor-if-small (sub qk x))))
-            (when (member (csign (factor-if-small (mul (sub x pk) (sub qk x))))
+            (when (member (csign ($factor (mul (sub x pk) (sub qk x))))
                    '($pos $pz) :test #'eq) 
               (throw 'done t))))))
 
@@ -74,7 +82,6 @@
 
 (defun simplim$max (expr var val)
   (cons '($max) (mapcar #'(lambda (e) (limit e var val 'think)) (cdr expr))))
-
 
 (defprop $max simp-max operators)
 
@@ -138,7 +145,6 @@
               (setq pp ($union pp nn)))
           (setq l (cdr pp))))
     
-    ;(mtell "at 4:  l = ~M ~%" (cons '(mlist) l))
     ;; Accumulate the maximum in the list acc. For each x in l, do:
     ;; (a) if x is > or >= every member of acc, set acc to (x),
     ;; (b) if x is < or <= to some member of acc, do nothing,
@@ -150,17 +156,16 @@
         (catch 'done
           (dolist (ai acc)
 	            (setq sgn ($compare x ai))
-             ;; (print `(sgn = ,sgn))
 	            (cond ((member sgn '(">" ">=") :test #'equal)
 		                    (setq acc (delete ai acc :test #'eq)))
 	                  ((eq sgn '$notcomparable) (setq issue-warning t))
 	                  ((member sgn '("<" "=" "<=") :test #'equal)
 		                  (throw 'done t))))
                (push x acc)))
-    (setq l acc))
+      (setq l acc))
   
     ;(mtell "at 5:  l = ~M ~%" (cons '(mlist) l))
-    ;; When issue-warning is false and maxmin_effort > 2 , use the betweenp 
+    ;; When issue-warning is false and maxmin_effort > 2, use the betweenp 
     ;; simplification.
     (when (and (not issue-warning) (> $maxmin_effort 2))
 	    (setq acc nil)
@@ -177,7 +182,7 @@
     (cond ((null l) '$minf) ;max(emptyset) -> minf.
           ((and (not issue-warning) (member '$inf l :test #'eq)) '$inf)
           ((null (cdr l)) (car l)) ;singleton case: max(xx) --> xx
-          (t  `(($max simp) ,@(sort l '$orderlessp)))))) ;nouform return.
+          (t  `(($max simp) ,@(sort l '$orderlessp)))))) ;nounform return.
 
 ;; Return -x, but check for the special cases x = inf, minf, und, ind, and infinity.
 ;; Also locally set negdistrib to true (this is what the function neg does). We could
@@ -297,4 +302,3 @@
 	(($bfloatp e) (cl-rat-to-maxima (* (cadr e)(expt 2 (- (caddr e) (third (car e)))))))
 	(($mapatom e) e)
 	(t (simplify (cons (list (mop e)) (mapcar #'$rationalize (margs e)))))))
-
