@@ -1,0 +1,213 @@
+/* #3769 max or min called on CRE expressions */
+max(a,b) - max(rat(a), b);
+0$
+
+/* #3764 limit of min works with assume but not with asksign */
+/* I'm can't figure out how to test for the asksign version of this bug. Here
+is an assume version, but this wasn't the bug.*/
+(assume(x>1),0);
+0$
+
+limit(min(x^a,x^(2*a))-x^a,a,inf);
+0$
+
+(forget(x>1),0)$
+0$
+
+/* #3765 min(und,...) gives error with trylevel > 1 */
+block([maxmin_effort : 1], min(und,%pi));
+min(und,%pi)$
+
+block([maxmin_effort : 2], min(und,%pi));
+min(und,%pi)$
+
+block([maxmin_effort : 3], min(und,%pi));
+min(und,%pi)$
+
+block([maxmin_effort : 10], min(und,%pi));
+min(und,%pi)$
+
+block([maxmin_effort : 1], max(und,%pi));
+max(und,%pi)$
+
+block([maxmin_effort : 2], max(und,%pi));
+max(und,%pi)$
+
+block([maxmin_effort : 3], max(und,%pi));
+max(und,%pi)$
+
+block([maxmin_effort : 10], max(und,%pi));
+max(und,%pi)$
+
+/* #3736 Quoting either min or max inhibits simplification */
+'max(1,1);
+1$
+
+'max(107,46);
+107$
+
+/* #3508 max(zeroa,zerob) gives zerob */
+ max(zeroa,zerob);
+ zeroa$
+
+ min(zeroa,zerob);
+ zerob$
+
+/* #3146 max() runs out of memory when comparing exponential functions */
+max(2.103-7.053*%e^(-4.0681*10^5*t), 2.0325-6.9825*%e^(-4.9238*10^5*t));
+max(2.0325-6.9825*%e^(-492380.0*t),2.103-7.053*%e^(-406810.0*t))$
+
+/* #1498 min and max of imaginary and real numbers */
+min(%i*inf,inf);
+min(%i*inf,inf)$
+
+min(%i*minf,minf);
+min(%i*minf,minf)$
+
+min(%i*inf,inf);
+min(%i*inf,inf)$
+
+min(%i*minf,minf);
+min(%i*minf,minf)$
+
+min(%i*-inf,-inf);
+min(%i*-inf,-inf)$
+
+min(%i*-inf,minf);
+min(%i*-inf,minf)$
+
+min(%i*minf,-inf);
+min(%i*minf,-inf)$
+
+max(%i*minf,inf);
+max(%i*minf,inf)$
+
+max(%i*minf,minf);
+max(%i*minf,minf)$
+
+max(%i*inf,inf);
+max(%i*inf,inf)$
+
+min(%i*inf,inf);
+min(%i*inf,inf)$
+
+max(%i*-inf,-inf);
+max(%i*-inf,-inf)$
+
+max(%i*minf,minf);
+max(%i*minf,minf)$
+
+max(7*%i*inf+4*inf,4*%i*inf+3);
+max(7*%i*inf+4*inf,4*%i*inf+3)$
+
+min(7*%i*inf+4*inf,4*%i*inf+3);
+min(7*%i*inf+4*inf,4*%i*inf+3)$
+
+min(7*%i*minf+4*inf,4*%i*minf+3);
+min(7*%i*minf+4*inf,4*%i*minf+3)$
+
+min(7*%i*minf+4*inf,4*%i*-inf+3);
+min(7*%i*minf+4*inf,4*%i*-inf+3)$
+
+min(-inf,minf);
+minf$
+
+max(-inf,minf);
+minf$
+
+/* #1460 compare(max(1,%i)-%i,0) / FIX */
+compare(max(1,%i)-%i,0);
+notcomparable$
+
+ is(equal(max(1,%i),0));
+ false$
+
+ /* #1436 sign(max(7,x) - max(6,x)) --> error */
+ sign(max(7,x) - max(6,x));
+ pz$
+
+/* #1172 max(inf, ...) doesn't simplify to inf */
+ max(1/(1-x),inf);
+ inf$
+
+/* #1171 max leads to UND error */
+ max(1/(q-1));
+ 1/(q-1)$
+
+max(1/(q-1),1/(q-1));
+max(1/(q-1))$
+
+compare(minf,1/(q-1));
+"<"$
+
+compare(1/(q-1),minf);
+">"$
+
+/* #1073 max and min of an array*/
+(f : make_array('any,2),0);
+0$
+
+max(f,1);
+max(f,1)$
+
+min(f,1);
+min(f,1)$
+
+(remvalue(f),0);
+0$
+
+/* #990 ratsubst and sets, floor, ceiling, min, max */
+ratsubst(a,b,min(a,b));
+a$
+
+ ratsubst(a,b,max(a,b));
+ a$
+
+/* #542 max and min with CRE expressions */
+ max(1,rat(x));
+ max(1,x)$
+
+/* #398 MAX(a+b,c) is NOT equal to MAX(c,a+b) */
+max(a+b,c); 
+max(a+b,c)$
+
+max(c,a+b);
+max(c,a+b)$
+
+(assume(a+b > c),0);
+0$
+
+max(a+b,c);
+a+b$
+
+max(c,a+b);
+a+b$
+
+(forget(a+b > c),0);
+0$
+
+/* #338 min/max handles inf/minf/ind but not und */
+
+max(inf,minf);
+inf$
+
+max(x,inf);
+inf$
+
+max(ind,minf);
+ind$
+
+max(und,inf);
+inf$
+
+min(und,minf);
+minf$
+
+max(und,und);
+und$
+
+max(und,minf);
+und$
+
+
+

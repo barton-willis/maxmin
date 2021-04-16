@@ -81,7 +81,7 @@
 (defprop $max simplim$max simplim%function)
 
 (defun simplim$max (expr var val)
-  (cons '($max) (mapcar #'(lambda (e) (limit e var val 'think)) (cdr expr))))
+  (simplifya (cons '($max) (mapcar #'(lambda (e) (limit e var val 'think)) (cdr expr))) t))
 
 (defprop $max simp-max operators)
 
@@ -108,7 +108,7 @@
           (cond 
             ((max-p li)
               (setq acc (append acc (cdr li))))
-            (t  
+            ((and (not (eq li '$minf)) (not (alike1 '((mtimes) -1 $inf) li)))
               (push li acc))))
       (setq l acc))
 
@@ -201,7 +201,8 @@
 (defprop $min simplim$min simplim%function)
 
 (defun simplim$min (expr var val)
-  (cons '($min) (mapcar #'(lambda (e) (limit e var val 'think)) (cdr expr))))
+ (simplifya (cons '($min) (mapcar #'(lambda (e) (limit e var val 'think)) 
+    (cdr expr))) t))
 
 (defprop $min simp-min operators)
 
@@ -251,6 +252,7 @@
 ;; being quizzed about the sign of x. Thus the call to lenient-extended-realp.
 
 (defmfun $compare (a b)
+  ;(mtell "compare ~M ~M ~%" a b)
   ;; Simplify expressions with infinities, indeterminates, or infinitesimals.
   ;; Without these checks, we can get odd questions such as "Is 1 zero or nonzero?"
   (when (amongl '($ind $und $inf $minf $infinity $zeroa $zerob) a)
