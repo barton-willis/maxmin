@@ -255,9 +255,9 @@
   ;(mtell "compare ~M ~M ~%" a b)
   ;; Simplify expressions with infinities, indeterminates, or infinitesimals.
   ;; Without these checks, we can get odd questions such as "Is 1 zero or nonzero?"
-  (when (amongl '($ind $und $inf $minf $infinity $zeroa $zerob) a)
+  (when (amongl '($ind $und $inf $minf $infinity) a)
     (setq a ($limit a)))
-  (when (amongl '($ind $und $inf $minf $infinity $zeroa $zerob) b)
+  (when (amongl '($ind $und $inf $minf $infinity) b)
     (setq b ($limit b)))
   
   (cond 

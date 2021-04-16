@@ -209,5 +209,9 @@ und$
 max(und,minf);
 und$
 
+max(zeroa, zerob);
+zeroa$
 
+min(zeroa, zerob);
+zerob$
 
