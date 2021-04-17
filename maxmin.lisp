@@ -101,32 +101,25 @@
     (setq l (cdr  l))
 
     ;; When maxmin_effort > 0, simplify each member of l and flatten (that is, do
-    ;; max(a,max(a,b)) -> max(a,b,c)). The effort for this step is O(n).
+    ;; max(a,max(a,b)) -> max(a,b,c)). Additionally, we accumulate the largest real
+    ;; number. Since (mnump '$%i) --> false, we don't have to worry that num-max is 
+    ;; complex. The effort for this step is O(n).
     (when (> $maxmin_effort 0)
       (dolist (li l)
           (setq li (simplifya (specrepcheck li) z))
           (cond 
             ((max-p li)
               (setq acc (append acc (cdr li))))
+            ((mnump li) 
+              (setq num-max (if (or (null num-max) (mgrp li num-max)) li num-max)))
             ((and (not (eq li '$minf)) (not (alike1 '((mtimes) -1 $inf) li)))
               (push li acc))))
-      (setq l acc))
-
-    ;(mtell "at 1:  l = ~M ~%" (cons '(mlist) l))
-    ;; Find the largest real number in l. Since (mnump '$%i) --> false, we don't 
-    ;; have to worry that num-max is complex. The effort for this step is O(n).  
-    (when (> $maxmin_effort 0)
-      (setq acc nil)         
-      (dolist (li l)
-         (if (mnump li) 
-         (setq num-max (if (or (null num-max) (mgrp li num-max)) li num-max)) (push li acc)))
-      
       (when num-max
-        (push num-max acc))
+        (push num-max acc))        
       (setq l acc))
 
-    ;(mtell "at 2:  l = ~M ~%" (cons '(mlist) l))
-    ;; Sort and remove duplicates.  The effort for this step is O(n logn)).  
+    ;;(mtell "at 2:  l = ~M ~%" (cons '(mlist) l))
+    ;; Sort and remove duplicates. The effort for this step is O(n logn)).  
     (when (> $maxmin_effort 0)  
       (setq l (sorted-remove-duplicates (sort l '$orderlessp))))
 
@@ -253,8 +246,8 @@
 
 (defmfun $compare (a b)
   ;(mtell "compare ~M ~M ~%" a b)
-  ;; Simplify expressions with infinities, indeterminates, or infinitesimals.
-  ;; Without these checks, we can get odd questions such as "Is 1 zero or nonzero?"
+  ;; Simplify expressions with infinities or indeterminates. Without these checks, 
+  ;; we can get odd questions such as "Is 1 zero or nonzero?"
   (when (amongl '($ind $und $inf $minf $infinity) a)
     (setq a ($limit a)))
   (when (amongl '($ind $und $inf $minf $infinity) b)
