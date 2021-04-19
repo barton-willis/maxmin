@@ -44,6 +44,7 @@
           (merror (intl:gettext "The value of maxmin_effort must be a nonnegative integer; found ~M ~%") y))))
 
 (defprop $maxmin_effort maxmin_effort-assign assign)
+
 ;; Return true if there is pi in the CL list p and qi in the CL lisp q such that
 ;; x is between pi and qi.  This means that either pi <= x <= qi or
 ;; qi <= x <= pi. For example, 2x is between x and 3x.
@@ -150,7 +151,7 @@
           (dolist (ai acc)
 	            (setq sgn ($compare x ai))
 	            (cond ((member sgn '(">" ">=") :test #'equal)
-		                    (setq acc (delete ai acc :test #'eq)))
+		                  (setq acc (delete ai acc :test #'eq :from-end t :count 1)))
 	                  ((eq sgn '$notcomparable) (setq issue-warning t))
 	                  ((member sgn '("<" "=" "<=") :test #'equal)
 		                  (throw 'done t))))
@@ -246,11 +247,11 @@
 
 (defmfun $compare (a b)
   ;(mtell "compare ~M ~M ~%" a b)
-  ;; Simplify expressions with infinities or indeterminates. Without these checks, 
-  ;; we can get odd questions such as "Is 1 zero or nonzero?"
-  (when (amongl '($ind $und $inf $minf $infinity) a)
+  ;; Simplify expressions with infinities. Without these checks, we can get odd 
+  ;; questions such as "Is 1 zero or nonzero?"
+  (when (amongl '($inf $minf $infinity) a)
     (setq a ($limit a)))
-  (when (amongl '($ind $und $inf $minf $infinity) b)
+  (when (amongl '($inf $minf $infinity) b)
     (setq b ($limit b)))
   
   (cond 
