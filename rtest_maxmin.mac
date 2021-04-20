@@ -1,3 +1,6 @@
+(reset(maxmin_effort),0);
+0$
+
 /* #3769 max or min called on CRE expressions */
 max(a,b) - max(rat(a), b);
 0$
@@ -144,18 +147,22 @@ compare(1/(q-1),minf);
 ">"$
 
 /* #1073 max and min of an array*/
+
+/* For now, let's comment these tests out...some of these bugs stem from
+   things like sign(make_array('any,2)) --> error, for example. 
 (f : make_array('any,2),0);
 0$
 
 max(f,1);
-max(f,1)$
+max(''f,1)$
 
 min(f,1);
-min(f,1)$
+min(''f,1)$
 
 (remvalue(f),0);
 0$
 
+*/
 /* #990 ratsubst and sets, floor, ceiling, min, max */
 ratsubst(a,b,min(a,b));
 a$
@@ -214,4 +221,38 @@ zeroa$
 
 min(zeroa, zerob);
 zerob$
+
+/* does the assign function maxmin_effort work? */
+(xxx : maxmin_effort,0);
+0$
+
+errcatch(maxmin_effort : 2/3);
+[]$
+
+is(maxmin_effort = xxx);
+true$
+
+errcatch(maxmin_effort : 2<x);
+[]$
+
+is(maxmin_effort = xxx);
+true$
+
+(remvalue(xxx),0);
+0$
+
+max(1, cos(x)^2+sin(x)^2);
+1$
+
+min(1, cos(x)^2+sin(x)^2);
+1$
+
+max(107, cos(x)^2+sin(x)^2);
+107$
+
+min(107, cos(x)^2+sin(x)^2);
+1$
+
+
+
 

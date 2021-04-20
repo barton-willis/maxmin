@@ -213,8 +213,8 @@
     (setq l (simplifya (cons '($max) l) t))
     ;; Is the sort needed? I think so, but need a test that requires sorting...
     (if (max-p l)
-      (cons (list '$min 'simp) (sort (mapcar  #'limitneg (cdr l)) '$orderlessp)) 
-        (limitneg l))))
+            (cons (list '$min 'simp) (sort (mapcar  #'limitneg (cdr l)) '$orderlessp)) 
+           (limitneg l))))
 
 ;; Several functions (derivdegree for example) use the maximin function. Here is 
 ;; a replacement that uses simp-min or simp-max.
@@ -242,7 +242,6 @@
 ;; being quizzed about the sign of x. Thus the call to lenient-extended-realp.
 
 (defmfun $compare (a b)
-  ;; (mtell "compare ~M ~M ~%" a b)
   ;; Simplify expressions with infinities. Without these checks, we can get odd 
   ;; questions such as "Is 1 zero or nonzero?"
   (when (amongl '($inf $minf $infinity) a)
@@ -251,13 +250,18 @@
     (setq b ($limit b)))
   
   (cond 
+    ;; Attempt to catch expressions that are not extended real number valued. We
+    ;; don't want to do call csign on 1+und - und, and conclude that 1+und > und.
+    ;; The check lenient-extended-realp only looks at the main operator of the 
+    ;; expression. Thus lenient-extended-realp, flags a<b as not real valued, 
+    ;; but it fails to flag 107*(a<b). 
     ((or (amongl '($infinity $ind $und) a)
          (amongl '($infinity $ind $und) b)
          (not (lenient-extended-realp a))
          (not (lenient-extended-realp b)))
-         (if (eq t (meqp a b)) "=" '$notcomparable))    
+      (if (eq t (meqp a b)) "=" '$notcomparable))    
          
- 	      (t (let ((sgn (csign (specrepcheck (sub a b)))))
+ 	    (t (let ((sgn (csign ($rectform (specrepcheck (sub a b))))))
 	          (cond 
 		          ((eq sgn '$neg) "<")
 		          ((eq sgn '$nz) "<=")
@@ -278,6 +282,7 @@
        (not (mbagp e))
        (not ($featurep e '$nonscalar))
        (not (mrelationp e))
+       (not (arrayp e))
        (not ($member e $arrays))))
 
 (defun lenient-realp (e)
