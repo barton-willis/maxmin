@@ -74,10 +74,6 @@
                    '($pos $pz) :test #'eq) 
               (throw 'done t))))))
 
-;; Return true if y is the additive inverse of x. 
-(defun add-inversep (x y)
-  (eq t (meqp x (neg y))))
-
 ;; Define a simplim%function to handle a limit of $max.
 (defprop $max simplim$max simplim%function)
 
@@ -246,7 +242,7 @@
 ;; being quizzed about the sign of x. Thus the call to lenient-extended-realp.
 
 (defmfun $compare (a b)
-  ;(mtell "compare ~M ~M ~%" a b)
+  ;; (mtell "compare ~M ~M ~%" a b)
   ;; Simplify expressions with infinities. Without these checks, we can get odd 
   ;; questions such as "Is 1 zero or nonzero?"
   (when (amongl '($inf $minf $infinity) a)
