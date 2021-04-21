@@ -97,6 +97,7 @@
   (let ((acc nil) (sgn) (num-max nil) (issue-warning))
     (setq l (cdr  l))
 
+    ;;(mtell "at 1:  l = ~M ~%" (cons '(mlist) l))
     ;; When maxmin_effort > 0, simplify each member of l and flatten (that is, do
     ;; max(a,max(a,b)) -> max(a,b,c)). Additionally, we accumulate the largest real
     ;; number. Since (mnump '$%i) --> false, we don't have to worry that num-max is 
@@ -109,7 +110,9 @@
               (setq acc (append acc (cdr li))))
             ((mnump li) 
               (setq num-max (if (or (null num-max) (mgrp li num-max)) li num-max)))
-            ((and (not (eq li '$minf)) (not (alike1 '((mtimes) -1 $inf) li)))
+
+            ;; Removing minf & -inf now results in things like max(minf, %i*inf)-->%i*inf.
+            (t ;(not (eq li '$minf)) (not (alike1 '((mtimes) -1 $inf) li)))
               (push li acc))))
       (when num-max
         (push num-max acc))        
@@ -154,7 +157,8 @@
                (push x acc)))
       (setq l acc))
   
-    ;(mtell "at 5:  l = ~M ~%" (cons '(mlist) l))
+   ;; (mtell "at 5:  l = ~M ~%" (cons '(mlist) l))
+    ;;(print `(issue-warning ,issue-warning))
     ;; When issue-warning is false and maxmin_effort > 2, use the betweenp 
     ;; simplification.
     (when (and (not issue-warning) (> $maxmin_effort 2))
