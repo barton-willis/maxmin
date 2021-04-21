@@ -175,7 +175,8 @@
     (setq l (if (not issue-warning) (delete '$minf l) l))
     (cond ((null l) '$minf) ;max(emptyset) -> minf.
           ((and (not issue-warning) (member '$inf l :test #'eq)) '$inf)
-          ((null (cdr l)) (car l)) ;singleton case: max(xx) --> xx
+          ((and (null (cdr l))  (lenient-extended-realp (car l)))
+             (car l)) ;singleton case: max(xx) --> xx
           (t  `(($max simp) ,@(sort l '$orderlessp)))))) ;nounform return.
 
 ;; Return -x, but check for the special cases x = inf, minf, und, ind, and infinity.
