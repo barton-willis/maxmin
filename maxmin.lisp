@@ -266,7 +266,7 @@
          (not (lenient-extended-realp b)))
       (if (eq t (meqp a b)) "=" '$notcomparable))    
          
- 	    (t (let ((sgn (csign ($rectform (specrepcheck (sub a b))))))
+ 	    (t (let ((sgn (csign ($rectform (sub a b)))))
 	          (cond 
 		          ((eq sgn '$neg) "<")
 		          ((eq sgn '$nz) "<=")
