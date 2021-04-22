@@ -95,7 +95,7 @@
 (defun simp-max (l tmp z)
   (declare (ignore tmp))
   (let ((acc nil) (sgn) (num-max nil) (issue-warning))
-    (setq l (cdr  l))
+    (setq l (cdr l))
 
     ;;(mtell "at 1:  l = ~M ~%" (cons '(mlist) l))
     ;; When maxmin_effort > 0, simplify each member of l and flatten (that is, do
@@ -258,7 +258,7 @@
     ;; Attempt to catch expressions that are not extended real number valued. We
     ;; don't want to do call csign on 1+und - und, and conclude that 1+und > und.
     ;; The check lenient-extended-realp only looks at the main operator of the 
-    ;; expression. Thus lenient-extended-realp, flags a<b as not real valued, 
+    ;; expression. Thus lenient-extended-realp flags a<b as not real valued, 
     ;; but it fails to flag 107*(a<b). 
     ((or (amongl '($infinity $ind $und) a)
          (amongl '($infinity $ind $und) b)
