@@ -118,12 +118,18 @@
         (push num-max acc))        
       (setq l acc))
 
-    ;;(mtell "at 2:  l = ~M ~%" (cons '(mlist) l))
+    ;; For inputs such as max(max(5,a), max(7,b), max(8,c), ...),  the list
+    ;; l might contain many numbers. That could make some of the following 
+    ;; simplifications slow. We could flag this case and redo the loop that 
+    ;; looks for the largest number, or we could remove the mnump check from the first
+    ;; loop and separately make a loop that looks for the largest number.  
+
+    (mtell "at 2:  l = ~M ~%" (cons '(mlist) l))
     ;; Sort and remove duplicates. The effort for this step is O(n logn)).  
     (when (> $maxmin_effort 0)  
       (setq l (sorted-remove-duplicates (sort l '$orderlessp))))
 
-     ;(mtell "at 3:  l = ~M ~%" (cons '(mlist) l))
+    ;(mtell "at 3:  l = ~M ~%" (cons '(mlist) l))
     ;; When maxmin_effort > 2, if e and -e are members of l, replace e & -e by
     ;; abs(e).     
     (when (> $maxmin_effort 2)
@@ -201,7 +207,7 @@
 
 (defprop $min simp-min operators)
 
-;; The function simp-min mostly piggy-backs onto simp-max. That is, we use
+;; The function simp-min piggy-backs onto simp-max. That is, we use
 ;; min(a,b,...) = -max(-a,-b,...).
 (defun simp-min (l tmp z)
   (declare (ignore tmp))
