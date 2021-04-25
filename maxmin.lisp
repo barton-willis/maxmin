@@ -67,9 +67,11 @@
 ;; to miss the simplification max(x^2,x^4,x^6) --> max(x^2, x^4). Arguably, csign
 ;; should be more semantically neutral--until it is, let's keep factor in here.
 (defun betweenp (x p q)
+  ;(print `(p = ,p q = ,q))
   (catch 'done
       (dolist (pk p)
 	      (dolist (qk q)
+            ;(mtell "pk = ~M qk = ~M x = ~M ~%" pk qk x)
             (when (member (csign ($factor (mul (sub x pk) (sub qk x))))
                    '($pos $pz) :test #'eq) 
               (throw 'done t))))))
@@ -89,6 +91,11 @@
 ; True iff e is a GRE expression of the form min(...)
 (defun min-p (e)
   (and (consp e) (eq (caar e) '$min)))
+
+(defun symbol-amongl (l e)
+  (or
+    (and (atom e) (member e l :test #'eq))
+    (and (consp e) (some #'(lambda (q) (symbol-amongl l q)) (cdr e)))))
 
 ;; Undone:  max(1-x,1+x) - max(x,-x) --> 1.
 
@@ -124,7 +131,7 @@
     ;; looks for the largest number, or we could remove the mnump check from the first
     ;; loop and separately make a loop that looks for the largest number.  
 
-    (mtell "at 2:  l = ~M ~%" (cons '(mlist) l))
+    ;;(mtell "at 2:  l = ~M ~%" (cons '(mlist) l))
     ;; Sort and remove duplicates. The effort for this step is O(n logn)).  
     (when (> $maxmin_effort 0)  
       (setq l (sorted-remove-duplicates (sort l '$orderlessp))))
@@ -255,9 +262,11 @@
 (defmfun $compare (a b)
   ;; Simplify expressions with infinities. Without these checks, we can get odd 
   ;; questions such as "Is 1 zero or nonzero?"
-  (when (amongl '($inf $minf $infinity) a)
+  (setq a (ratdisrep a))
+  (setq b (ratdisrep b))
+  (when (symbol-amongl '($inf $minf $infinity) a)
     (setq a ($limit a)))
-  (when (amongl '($inf $minf $infinity) b)
+  (when (symbol-amongl '($inf $minf $infinity) b)
     (setq b ($limit b)))
   
   (cond 
@@ -266,8 +275,8 @@
     ;; The check lenient-extended-realp only looks at the main operator of the 
     ;; expression. Thus lenient-extended-realp flags a<b as not real valued, 
     ;; but it fails to flag 107*(a<b). 
-    ((or (amongl '($infinity $ind $und) a)
-         (amongl '($infinity $ind $und) b)
+    ((or (symbol-amongl '($infinity $ind $und) a)
+         (symbol-amongl '($infinity $ind $und) b)
          (not (lenient-extended-realp a))
          (not (lenient-extended-realp b)))
       (if (eq t (meqp a b)) "=" '$notcomparable))    
@@ -289,12 +298,12 @@
 ;; expression is empty, yet lenient-extended-realp returns true for this input.
 
 (defun lenient-extended-realp (e)
-  (and ($freeof '$infinity '$%i '$und '$ind '$false '$true t nil e) ;; what else?
-       (not (mbagp e))
+  (and (not (mbagp e))
        (not ($featurep e '$nonscalar))
        (not (mrelationp e))
        (not (arrayp e))
-       (not ($member e $arrays))))
+       (not ($member e $arrays))
+       (not (symbol-amongl '($infinity $%i $und $ind $false $true t nil) e)))) ;; what else?
 
 (defun lenient-realp (e)
   (and ($freeof '$inf '$minf e) (lenient-extended-realp e)))
@@ -310,3 +319,4 @@
 	(($bfloatp e) (cl-rat-to-maxima (* (cadr e)(expt 2 (- (caddr e) (third (car e)))))))
 	(($mapatom e) e)
 	(t (simplify (cons (list (mop e)) (mapcar #'$rationalize (margs e)))))))
+
