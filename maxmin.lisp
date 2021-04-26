@@ -71,7 +71,7 @@
   (catch 'done
       (dolist (pk p)
 	      (dolist (qk q)
-            ;(mtell "pk = ~M qk = ~M x = ~M ~%" pk qk x)
+            (mtell "pk = ~M qk = ~M x = ~M ~%" pk qk x)
             (when (member (csign ($factor (mul (sub x pk) (sub qk x))))
                    '($pos $pz) :test #'eq) 
               (throw 'done t))))))
@@ -175,6 +175,9 @@
     ;; When issue-warning is false and maxmin_effort > 2, use the betweenp 
     ;; simplification.
     (when (and (not issue-warning) (> $maxmin_effort 2))
+      (setq l (cdr ($joey (cons '(mlist) l)))))
+
+    (when (and nil (not issue-warning) (> $maxmin_effort 2))
 	    (setq acc nil)
 	    (setq sgn (cdr l))
 	    (dolist (ai l)
@@ -320,3 +323,24 @@
 	(($mapatom e) e)
 	(t (simplify (cons (list (mop e)) (mapcar #'$rationalize (margs e)))))))
 
+(defun xxbetweenp (x a b)
+  ;(mtell "x = ~M a = ~M b = ~M ~%" x a b)
+  (member (csign ($factor (mul (sub x a) (sub b x)))) '($pos $pz) :test #'eq)) 
+
+(defun $joey (a)
+  (let ((acc nil) (x))
+      (setq a (cdr a))
+      (while a
+         (setq x (pop a))
+         (when (not (joey x acc a)) 
+            (push x acc)))
+      (push '(mlist) acc)))
+
+(defun joey (x a b)
+  (and (consp a) (consp b)
+    (or
+      (xxbetweenp x (car a) (car b))
+      (joey x (list (car a)) (cdr b))
+      (joey x (cdr a) b))))
+ 
+         
