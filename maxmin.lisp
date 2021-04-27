@@ -45,9 +45,9 @@
 
 (defprop $maxmin_effort maxmin_effort-assign assign)
 
-;; Return true if there is pi in the CL list p and qi in the CL lisp q such that
-;; x is between pi and qi.  This means that either pi <= x <= qi or
-;; qi <= x <= pi. For example, 2x is between x and 3x.
+;; Return true if there is pi, pj in the CL list p such that
+;; x is between pi and pj.  This means that either pi <= x <= pj or
+;; pj <= x <= pi. For example, 2x is between x and 3x.
 
 ;; Strangely, sign((a-b)*(b-a)) --> pnz but sign(expand((a-b)*(b-a))) --> nz.
 ;; To workaround this weirdness, we could call expand instead of factor on 
@@ -66,16 +66,19 @@
 ;; Removing factor from (csign ($factor (mul (sub x pk) (sub qk x))) causes max
 ;; to miss the simplification max(x^2,x^4,x^6) --> max(x^2, x^4). Arguably, csign
 ;; should be more semantically neutral--until it is, let's keep factor in here.
-(defun betweenp (x p q)
-  ;(print `(p = ,p q = ,q))
-  (catch 'done
-      (dolist (pk p)
-	      (dolist (qk q)
-            (mtell "pk = ~M qk = ~M x = ~M ~%" pk qk x)
+
+(defun betweenp (x p)
+  (let ((q) (pk) (qk))
+   (catch 'done
+      (while p
+        (setq pk (pop p))
+        (setq q p)
+	      (while q
+            (setq qk (pop q))
             (when (member (csign ($factor (mul (sub x pk) (sub qk x))))
                    '($pos $pz) :test #'eq) 
-              (throw 'done t))))))
-
+              (throw 'done t)))))))
+              
 ;; Define a simplim%function to handle a limit of $max.
 (defprop $max simplim$max simplim%function)
 
@@ -174,16 +177,17 @@
     ;;(print `(issue-warning ,issue-warning))
     ;; When issue-warning is false and maxmin_effort > 2, use the betweenp 
     ;; simplification.
-    (when (and (not issue-warning) (> $maxmin_effort 2))
-      (setq l (cdr ($joey (cons '(mlist) l)))))
+    ;(when (and (not issue-warning) (> $maxmin_effort 2))
+    ;  (setq l (cdr ($joey (cons '(mlist) l)))))
 
-    (when (and nil (not issue-warning) (> $maxmin_effort 2))
+    (when (and (not issue-warning) (> $maxmin_effort 2))
 	    (setq acc nil)
 	    (setq sgn (cdr l))
 	    (dolist (ai l)
-	      (when (not (betweenp ai sgn sgn)) 
+        ;(mtell "sgn = ~M ~%" (cons '(mlist) sgn))
+	      (when (not (betweenp ai sgn)) 
            (push ai acc))
-	      (setq sgn `(,@(cdr sgn) ,ai)))
+       	(setq sgn `(,@(cdr sgn) ,ai)))
 	    (setq l acc))
 
     ;(mtell "at 6:  l = ~M ~%" (cons '(mlist) l))  
@@ -323,24 +327,6 @@
 	(($mapatom e) e)
 	(t (simplify (cons (list (mop e)) (mapcar #'$rationalize (margs e)))))))
 
-(defun xxbetweenp (x a b)
-  ;(mtell "x = ~M a = ~M b = ~M ~%" x a b)
-  (member (csign ($factor (mul (sub x a) (sub b x)))) '($pos $pz) :test #'eq)) 
 
-(defun $joey (a)
-  (let ((acc nil) (x))
-      (setq a (cdr a))
-      (while a
-         (setq x (pop a))
-         (when (not (joey x acc a)) 
-            (push x acc)))
-      (push '(mlist) acc)))
-
-(defun joey (x a b)
-  (and (consp a) (consp b)
-    (or
-      (xxbetweenp x (car a) (car b))
-      (joey x (list (car a)) (cdr b))
-      (joey x (cdr a) b))))
  
          
