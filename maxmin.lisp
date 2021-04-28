@@ -45,7 +45,7 @@
 
 (defprop $maxmin_effort maxmin_effort-assign assign)
 
-;; Return true if there is pi, pj in the CL list p such that
+;; Return true if there is pi and pj in the CL list p such that
 ;; x is between pi and pj.  This means that either pi <= x <= pj or
 ;; pj <= x <= pi. For example, 2x is between x and 3x.
 
@@ -75,8 +75,7 @@
         (setq q p)
 	      (while q
             (setq qk (pop q))
-            (when (member (csign ($factor (mul (sub x pk) (sub qk x))))
-                   '($pos $pz) :test #'eq) 
+            (when (member (csign ($factor (mul (sub x pk) (sub qk x)))) '($pos $pz) :test #'eq) 
               (throw 'done t)))))))
               
 ;; Define a simplim%function to handle a limit of $max.
@@ -326,7 +325,3 @@
 	(($bfloatp e) (cl-rat-to-maxima (* (cadr e)(expt 2 (- (caddr e) (third (car e)))))))
 	(($mapatom e) e)
 	(t (simplify (cons (list (mop e)) (mapcar #'$rationalize (margs e)))))))
-
-
- 
-         
