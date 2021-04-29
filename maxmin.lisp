@@ -94,11 +94,6 @@
 (defun min-p (e)
   (and (consp e) (eq (caar e) '$min)))
 
-(defun symbol-amongl (l e)
-  (or
-    (and (atom e) (member e l :test #'eq))
-    (and (consp e) (some #'(lambda (q) (symbol-amongl l q)) (cdr e)))))
-
 ;; Undone:  max(1-x,1+x) - max(x,-x) --> 1.
 
 (defun simp-max (l tmp z)
@@ -270,9 +265,9 @@
   ;; questions such as "Is 1 zero or nonzero?"
   (setq a (ratdisrep a))
   (setq b (ratdisrep b))
-  (when (symbol-amongl '($inf $minf $infinity) a)
+  (when (amongl '($inf $minf $infinity) a)
     (setq a ($limit a)))
-  (when (symbol-amongl '($inf $minf $infinity) b)
+  (when (amongl '($inf $minf $infinity) b)
     (setq b ($limit b)))
   
   (cond 
@@ -281,8 +276,8 @@
     ;; The check lenient-extended-realp only looks at the main operator of the 
     ;; expression. Thus lenient-extended-realp flags a<b as not real valued, 
     ;; but it fails to flag 107*(a<b). 
-    ((or (symbol-amongl '($infinity $ind $und) a)
-         (symbol-amongl '($infinity $ind $und) b)
+    ((or (amongl '($infinity $ind $und) a)
+         (amongl '($infinity $ind $und) b)
          (not (lenient-extended-realp a))
          (not (lenient-extended-realp b)))
       (if (eq t (meqp a b)) "=" '$notcomparable))    
@@ -309,7 +304,7 @@
        (not (mrelationp e))
        (not (arrayp e))
        (not ($member e $arrays))
-       (not (symbol-amongl '($infinity $%i $und $ind $false $true t nil) e)))) ;; what else?
+       (not (amongl '($infinity $%i $und $ind $false $true t nil) e)))) ;; what else?
 
 (defun lenient-realp (e)
   (and ($freeof '$inf '$minf e) (lenient-extended-realp e)))
