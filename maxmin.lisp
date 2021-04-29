@@ -2,7 +2,7 @@
 ;; Copyright (C) 2005, 2007, 2021 Barton Willis
 
 ;; Barton Willis
-;; Department of Mathematics, 
+;; Department of Mathematics 
 ;; University of Nebraska at Kearney
 ;; Kearney NE 68847
 ;; willisb@unk.edu
@@ -101,7 +101,6 @@
   (let ((acc nil) (sgn) (num-max nil) (issue-warning))
     (setq l (cdr l))
 
-    ;;(mtell "at 1:  l = ~M ~%" (cons '(mlist) l))
     ;; When maxmin_effort > 0, simplify each member of l and flatten (that is, do
     ;; max(a,max(a,b)) -> max(a,b,c)). Additionally, we accumulate the largest real
     ;; number. Since (mnump '$%i) --> false, we don't have to worry that num-max is 
@@ -128,12 +127,10 @@
     ;; looks for the largest number, or we could remove the mnump check from the first
     ;; loop and separately make a loop that looks for the largest number.  
 
-    ;;(mtell "at 2:  l = ~M ~%" (cons '(mlist) l))
     ;; Sort and remove duplicates. The effort for this step is O(n logn)).  
     (when (> $maxmin_effort 0)  
       (setq l (sorted-remove-duplicates (sort l '$orderlessp))))
 
-    ;(mtell "at 3:  l = ~M ~%" (cons '(mlist) l))
     ;; When maxmin_effort > 2, if e and -e are members of l, replace e & -e by
     ;; abs(e).     
     (when (> $maxmin_effort 2)
@@ -167,13 +164,8 @@
                (push x acc)))
       (setq l acc))
   
-   ;; (mtell "at 5:  l = ~M ~%" (cons '(mlist) l))
-    ;;(print `(issue-warning ,issue-warning))
     ;; When issue-warning is false and maxmin_effort > 2, use the betweenp 
     ;; simplification.
-    ;(when (and (not issue-warning) (> $maxmin_effort 2))
-    ;  (setq l (cdr ($joey (cons '(mlist) l)))))
-
     (when (and (not issue-warning) (> $maxmin_effort 2))
 	    (setq acc nil)
 	    (setq sgn (cdr l))
@@ -184,7 +176,6 @@
        	(setq sgn `(,@(cdr sgn) ,ai)))
 	    (setq l acc))
 
-    ;(mtell "at 6:  l = ~M ~%" (cons '(mlist) l))  
     ;; Finally, do a few clean ups:    
     (setq l (if (not issue-warning) (delete '$minf l) l))
     (cond ((null l) '$minf) ;max(emptyset) -> minf.
