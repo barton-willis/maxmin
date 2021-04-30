@@ -170,7 +170,6 @@
 	    (setq acc nil)
 	    (setq sgn (cdr l))
 	    (dolist (ai l)
-        ;(mtell "sgn = ~M ~%" (cons '(mlist) sgn))
 	      (when (not (betweenp ai sgn)) 
            (push ai acc))
        	(setq sgn `(,@(cdr sgn) ,ai)))
