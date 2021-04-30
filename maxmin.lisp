@@ -35,6 +35,9 @@
 (defprop $max $max verb)
 (defprop $min $min verb)
 
+(setf (get '$max 'msimpind) (list '$max 'simp))
+(setf (get '$min 'msimpind) (list '$min 'simp))
+
 (defmvar $maxmin_effort 10)
 (defun maxmin_effort-assign (xx y)
   (declare (ignore xx))
@@ -181,7 +184,8 @@
           ((and (not issue-warning) (member '$inf l :test #'eq)) '$inf)
           ((and (null (cdr l))  (lenient-extended-realp (car l)))
              (car l)) ;singleton case: max(xx) --> xx
-          (t  `(($max simp) ,@(sort l '$orderlessp)))))) ;nounform return.
+          (t  ;;`(($max simp) ,@(sort l '$orderlessp)))))) ;nounform return.
+              (cons (get '$max 'msimpind) (sort l #'$orderlessp))))))
 
 ;; Return -x, but check for the special cases x = inf, minf, und, ind, and infinity.
 ;; Also locally set negdistrib to true (this is what the function neg does). We could
@@ -222,7 +226,7 @@
     (setq l (simplifya (cons '($max) l) t))
     ;; Is the sort needed? I think so, but need a test that requires sorting...
     (if (max-p l)
-            (cons (list '$min 'simp) (sort (mapcar  #'limitneg (cdr l)) '$orderlessp)) 
+            (cons (get '$min 'msimpind) (sort (mapcar  #'limitneg (cdr l)) #'$orderlessp)) 
            (limitneg l))))
 
 ;; Several functions (derivdegree for example) use the maximin function. Here is 
