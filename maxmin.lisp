@@ -132,7 +132,7 @@
 
     ;; Sort and remove duplicates. The effort for this step is O(n logn)).  
     (when (> $maxmin_effort 0)  
-      (setq l (sorted-remove-duplicates (sort l '$orderlessp))))
+      (setq l (sorted-remove-duplicates (sort l #'$orderlessp))))
 
     ;; When maxmin_effort > 2, if e and -e are members of l, replace e & -e by
     ;; abs(e).     
