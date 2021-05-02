@@ -90,11 +90,11 @@
 (defprop $max simp-max operators)
 
 ;; True iff e is a GRE expression of the form max(...)
-(defun max-p (e)
+(defun max-p (e) 
   (and (consp e) (eq (caar e) '$max)))
 
-; True iff e is a GRE expression of the form min(...)
-(defun min-p (e)
+;; True iff e is a GRE expression of the form min(...)
+(defun min-p (e) 
   (and (consp e) (eq (caar e) '$min)))
 
 ;; Undone:  max(1-x,1+x) - max(x,-x) --> 1.
@@ -118,7 +118,7 @@
               (setq num-max (if (or (null num-max) (mgrp li num-max)) li num-max)))
 
             ;; Removing minf & -inf now results in things like max(minf, %i*inf)-->%i*inf.
-            (t ;(not (eq li '$minf)) (not (alike1 '((mtimes) -1 $inf) li)))
+            (t 
               (push li acc))))
       (when num-max
         (push num-max acc))        
@@ -184,7 +184,7 @@
           ((and (not issue-warning) (member '$inf l :test #'eq)) '$inf)
           ((and (null (cdr l))  (lenient-extended-realp (car l)))
              (car l)) ;singleton case: max(xx) --> xx
-          (t  ;;`(($max simp) ,@(sort l '$orderlessp)))))) ;nounform return.
+          (t  ;;nounform return
               (cons (get '$max 'msimpind) (sort l #'$orderlessp))))))
 
 ;; Return -x, but check for the special cases x = inf, minf, und, ind, and infinity.
