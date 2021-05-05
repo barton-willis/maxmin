@@ -253,6 +253,145 @@ max(107, cos(x)^2+sin(x)^2);
 min(107, cos(x)^2+sin(x)^2);
 1$
 
+min(1);
+1$
+
+max(3/2, 1.51);
+1.51$
+
+max(3/2, 1.51b0);
+1.51b0$
+
+max(3/2, 1.51b0,F(x));
+max(1.51b0, F(x))$
+
+max(-inf, ,minf, log(2), 3/4);
+3/4$
+
+max(3,1,4,1,5,9,2,6,5,3);
+9$
+
+min(3,1,4,1,5,9,2,6,5,3);
+1$
+
+max(%pi, %e, %phi);
+%pi$
+
+min(%pi, %e, %phi);
+%e$
+
+max(inf,107);
+inf$
+
+max(-inf,107);
+107$
+
+max(max(a,b),max(c,d));
+max(a,b,c,d)$
+
+min(min(a,b),min(c,d));
+min(a,b,c,d)$
+
+min(max(a,b),min(c,d));
+min(c,d,max(a,b))$
+
+min(min(a,b),min(c,d));
+min(a,b,c,d)$
+
+max(1-x,1+x,x);
+max(1-x,1+x)$
 
 
+/* Examples from Stavros Macrakis. These are slow for maxmin_effort > 3. And so it goes.*/
+maxmin_effort : 10$
+
+lreduce('min,makelist(a[i],i,1,20));
+min(a[1],a[2],a[3],a[4],a[5],a[6],a[7],a[8],a[9],a[10],a[11],a[12],a[13],a[14],a[15],a[16],a[17],a[18],a[19],a[20])$
+
+rreduce('min,makelist(a[i],i,1,20));
+min(a[1],a[2],a[3],a[4],a[5],a[6],a[7],a[8],a[9],a[10],a[11],a[12],a[13],a[14],a[15],a[16],a[17],a[18],a[19],a[20])$
+
+xreduce('min,makelist(a[i],i,1,20));
+min(a[1],a[2],a[3],a[4],a[5],a[6],a[7],a[8],a[9],a[10],a[11],a[12],a[13],a[14],a[15],a[16],a[17],a[18],a[19],a[20])$
+
+tree_reduce('min,makelist(a[i],i,1,20));
+min(a[1],a[2],a[3],a[4],a[5],a[6],a[7],a[8],a[9],a[10],a[11],a[12],a[13],a[14],a[15],a[16],a[17],a[18],a[19],a[20])$
+
+lreduce('max,makelist(a[i],i,1,20));
+max(a[1],a[2],a[3],a[4],a[5],a[6],a[7],a[8],a[9],a[10],a[11],a[12],a[13],a[14],a[15],a[16],a[17],a[18],a[19],a[20])$
+
+rreduce('max,makelist(a[i],i,1,20));
+max(a[1],a[2],a[3],a[4],a[5],a[6],a[7],a[8],a[9],a[10],a[11],a[12],a[13],a[14],a[15],a[16],a[17],a[18],a[19],a[20])$
+
+xreduce('max,makelist(a[i],i,1,20));
+max(a[1],a[2],a[3],a[4],a[5],a[6],a[7],a[8],a[9],a[10],a[11],a[12],a[13],a[14],a[15],a[16],a[17],a[18],a[19],a[20])$
+
+tree_reduce('max,makelist(a[i],i,1,20));
+max(a[1],a[2],a[3],a[4],a[5],a[6],a[7],a[8],a[9],a[10],a[11],a[12],a[13],a[14],a[15],a[16],a[17],a[18],a[19],a[20])$
+
+min(a,max(b,c));
+
+max(x^2,x^4,x^6);
+max(x^2,x^6)$
+
+min(x^2,x^4,x^6);
+min(x^2,x^6)$
+
+max(a,min(b,max(c,min(d,a-1)))); 
+max(a,min(b,c))$
+
+max(a,min(a,max(c,min(d,a-1))));
+a$
+
+(load(unwind_protect),0);
+0$
+
+block([cntx : newcontext()],
+  unwind_protect(
+      (assume(a<b, b<c),
+      min(a,max(b,c))),
+      killcontext(cntx)));
+a$
+
+block([cntx : newcontext()],
+  unwind_protect(
+      (assume(b<a, a<c),
+      min(a,max(b,c))),
+      killcontext(cntx)));
+a$
+
+block([cntx : newcontext()],
+  unwind_protect(
+      (assume(b<c, c< a),
+      min(a,max(b,c))),
+      killcontext(cntx)));
+c$
+
+block([cntx : newcontext()],
+  unwind_protect(
+      (assume(a<b, b<c,c<d),
+      max(a,min(b,max(c,d)))),
+      killcontext(cntx)));
+b$
+
+block([cntx : newcontext()],
+  unwind_protect(
+      (assume(b<a, a<c,c< d),
+      max(a,min(b,max(c,d)))),
+      killcontext(cntx)));
+a$
+
+block([cntx : newcontext()],
+  unwind_protect(
+      (assume(b<c,c<a,a< d),
+      max(a,min(b,max(c,d)))),
+      killcontext(cntx)));
+a$
+
+block([cntx : newcontext()],
+  unwind_protect(
+      (assume(b<c,c<d,d<a),
+      max(a,min(b,max(c,d)))),
+      killcontext(cntx)));
+a$
 
