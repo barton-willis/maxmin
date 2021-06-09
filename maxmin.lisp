@@ -111,6 +111,11 @@
     (when (> $maxmin_effort 0)
       (dolist (li l)
           (setq li (simplifya (specrepcheck li) z))
+
+          (print `(li = ,li ,(amongl '($inf $minf $infinity) li)))
+          (when (amongl '($inf $minf $infinity) li)
+              (print "did it")
+              (setq li ($limit li)))
           (cond 
             ((max-p li)
               (setq acc (append acc (cdr li))))
