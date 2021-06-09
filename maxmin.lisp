@@ -97,7 +97,23 @@
 (defun min-p (e) 
   (and (consp e) (eq (caar e) '$min)))
 
-;; Undone:  max(1-x,1+x) - max(x,-x) --> 1.
+;; Undone:  max(1-x,1+x) - max(x,-x) --> 1. Doing this is possible--we could
+;; simplify max(1-x,1+x) --> 1 + max(-x,x).
+
+;; Return either the maximum of the arguments of l or a simplified max nounform.
+;; When max(a1,a2, ..., am) simplifies to a nounform, say max(b1, b2, ... , bn), each
+;; bk is *explicitly* one of a1 ... am. Much the same when max(a1,a2, ..., am) 
+;; simplifies to a non-nounform; thus, for example,
+;;
+;;  max(cos(x)^2+sin(x)^2,-107) --> cos(x)^2 + sin(x)^2 (*not* 1).
+;;
+;; Since coeff is purely syntatic, we have
+;; 
+;;   (%i1)	xxx : 42*x^(cos(a)^2+sin(a)^2) + x^(-107)$
+;;   (%i2)	coeff(xxx,x, hipow(xxx,x));
+;;   (%o2)	42
+;;
+;; And this is, I think, what users want.
 
 (defun simp-max (l tmp z)
   (declare (ignore tmp))
@@ -111,17 +127,11 @@
     (when (> $maxmin_effort 0)
       (dolist (li l)
           (setq li (simplifya (specrepcheck li) z))
-
-          (print `(li = ,li ,(amongl '($inf $minf $infinity) li)))
-          (when (amongl '($inf $minf $infinity) li)
-              (print "did it")
-              (setq li ($limit li)))
           (cond 
             ((max-p li)
               (setq acc (append acc (cdr li))))
             ((mnump li) 
               (setq num-max (if (or (null num-max) (mgrp li num-max)) li num-max)))
-
             ;; Removing minf & -inf now results in things like max(minf, %i*inf)-->%i*inf.
             (t 
               (push li acc))))
@@ -189,8 +199,10 @@
           ((and (not issue-warning) (member '$inf l :test #'eq)) '$inf)
           ((and (null (cdr l))  (lenient-extended-realp (car l)))
              (car l)) ;singleton case: max(xx) --> xx
+
+      
           (t  ;;nounform return
-              (cons (get '$max 'msimpind) (sort l #'$orderlessp))))))
+             (cons (get '$max 'msimpind) (sort l #'$orderlessp))))))
 
 ;; Return -x, but check for the special cases x = inf, minf, und, ind, and infinity.
 ;; Also locally set negdistrib to true (this is what the function neg does). We could
@@ -216,7 +228,7 @@
 
 ;; The function simp-min piggy-backs onto simp-max. That is, we use
 ;; min(a,b,...) = -max(-a,-b,...).
-(defun simp-min (l tmp z)
+(defun simp-min-xx (l tmp z)
   (declare (ignore tmp))
   (let ((acc nil))
     (setq l (cdr l))
@@ -233,6 +245,32 @@
     (if (max-p l)
             (cons (get '$min 'msimpind) (sort (mapcar  #'limitneg (cdr l)) #'$orderlessp)) 
            (limitneg l))))
+
+
+(defun simp-min (l tmp z)
+  (declare (ignore tmp))
+  (let ((xxx) (yyy) (acc nil))
+   ;; (setq l (cdr l))
+    (dolist (li (cdr l))
+      (setq li (simplifya (specrepcheck li) z)) 
+      ;; convert min(a, min(b,c)) --> min(a,b,c)
+      (if (min-p li)
+              (setq acc (append acc (cdr li)))
+              (push li acc)))
+
+    ;;;(print `(at 1 acc = ,acc))
+    (setq xxx (simplifya (cons '($max) (mapcar #'limitneg acc)) t))
+    (cond ((not (max-p xxx))
+            (limitneg xxx))
+          (t
+            ;; Here xxx = max(a1,a2,...,am).  We choose between returning 
+            ;; -max(a1,a2,...,am) or min(-a1,-a2, ..., -am)
+           ;; (print `(xxx = ,xxx))
+            (setq yyy (cons (get '$min 'msimpind) 
+                (sort (mapcar #'limitneg (cdr xxx)) #'$orderlessp)))
+            (setq xxx (limitneg xxx))
+            (if (great xxx yyy) xxx yyy)))))
+        
 
 ;; Several functions (derivdegree for example) use the maximin function. Here is 
 ;; a replacement that uses simp-min or simp-max.
@@ -259,6 +297,8 @@
 ;; I think compare(asin(x), asin(x) + 1) should evaluate to < without
 ;; being quizzed about the sign of x. Thus the call to lenient-extended-realp.
 
+;; Maxima's sign function doesn't know that zeroa > 0 and zerob < 0
+
 (defmfun $compare (a b)
   ;; Simplify expressions with infinities. Without these checks, we can get odd 
   ;; questions such as "Is 1 zero or nonzero?"
@@ -270,18 +310,33 @@
     (setq b ($limit b)))
   
   (cond 
+
+    ;; We'll make compare(infinity, infinity) -> noncompareable, but
+    ;; compare(inf, inf) -> "=". Simiarly, an expression involving ind or und
+    ;; is notcompareable.
+    ((or (amongl '($infinity $ind $und) a)
+         (amongl '($infinity $ind $und) b))
+        '$notcomparable)  
+
     ;; Attempt to catch expressions that are not extended real number valued. We
     ;; don't want to do call csign on 1+und - und, and conclude that 1+und > und.
     ;; The check lenient-extended-realp only looks at the main operator of the 
     ;; expression. Thus lenient-extended-realp flags a<b as not real valued, 
     ;; but it fails to flag 107*(a<b). 
-    ((or (amongl '($infinity $ind $und) a)
-         (amongl '($infinity $ind $und) b)
-         (not (lenient-extended-realp a))
+    
+    ((or (not (lenient-extended-realp a))
          (not (lenient-extended-realp b)))
       (if (eq t (meqp a b)) "=" '$notcomparable))    
          
- 	    (t (let ((sgn (csign ($rectform (sub a b)))))
+ 	    (t (let ((sgn))
+          (setq a (sub a b))
+          (when (and (>= $maxmin_effort 10) (lenient-extended-realp a) (amongl '($minf $inf) a))
+            (setq a ($limit a)))
+
+          (when (>= $maxmin_effort 10)
+            (setq a (sratsimp ($trigreduce a))))
+
+          (setq sgn (csign ($rectform a)))
 	          (cond 
 		          ((eq sgn '$neg) "<")
 		          ((eq sgn '$nz) "<=")
@@ -290,6 +345,7 @@
 		          ((eq sgn '$pn) "#")
               ((eq sgn '$zero) "=")
 		          (t '$unknown))))))
+   
 
 ;; When it's fairly likely that the real domain of e is nonempty, return true; 
 ;; otherwise, return false. Even if z has been declared complex, the real domain
