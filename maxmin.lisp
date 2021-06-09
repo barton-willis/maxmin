@@ -228,7 +228,7 @@
 
 ;; The function simp-min piggy-backs onto simp-max. That is, we use
 ;; min(a,b,...) = -max(-a,-b,...).
-(defun simp-min-xx (l tmp z)
+(defun simp-min (l tmp z)
   (declare (ignore tmp))
   (let ((acc nil))
     (setq l (cdr l))
@@ -245,32 +245,6 @@
     (if (max-p l)
             (cons (get '$min 'msimpind) (sort (mapcar  #'limitneg (cdr l)) #'$orderlessp)) 
            (limitneg l))))
-
-
-(defun simp-min (l tmp z)
-  (declare (ignore tmp))
-  (let ((xxx) (yyy) (acc nil))
-   ;; (setq l (cdr l))
-    (dolist (li (cdr l))
-      (setq li (simplifya (specrepcheck li) z)) 
-      ;; convert min(a, min(b,c)) --> min(a,b,c)
-      (if (min-p li)
-              (setq acc (append acc (cdr li)))
-              (push li acc)))
-
-    ;;;(print `(at 1 acc = ,acc))
-    (setq xxx (simplifya (cons '($max) (mapcar #'limitneg acc)) t))
-    (cond ((not (max-p xxx))
-            (limitneg xxx))
-          (t
-            ;; Here xxx = max(a1,a2,...,am).  We choose between returning 
-            ;; -max(a1,a2,...,am) or min(-a1,-a2, ..., -am)
-           ;; (print `(xxx = ,xxx))
-            (setq yyy (cons (get '$min 'msimpind) 
-                (sort (mapcar #'limitneg (cdr xxx)) #'$orderlessp)))
-            (setq xxx (limitneg xxx))
-            (if (great xxx yyy) xxx yyy)))))
-        
 
 ;; Several functions (derivdegree for example) use the maximin function. Here is 
 ;; a replacement that uses simp-min or simp-max.
