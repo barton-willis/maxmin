@@ -241,6 +241,7 @@
               (push li acc))))
     (setq l (mapcar #'limitneg acc))
     (setq l (simplifya (cons '($max) l) t))
+    (mtell "l = ~M ~%" l)
     ;; Is the sort needed? I think so, but need a test that requires sorting...
     (if (max-p l)
             (cons (get '$min 'msimpind) (sort (mapcar  #'limitneg (cdr l)) #'$orderlessp)) 
