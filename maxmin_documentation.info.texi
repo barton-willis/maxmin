@@ -56,7 +56,7 @@ members and excludes those that are in between; for example
 @deffn {Function} min (@var{x_1}, @dots{}, @var{x_n})
 
 Return a simplified value for the numerical minimum of the expressions @var{x_1} 
-through @var{x_n}. For an empty argument list, @code{max} yields @code{inf}.
+through @var{x_n}. For an empty argument list, @code{minf} yields @code{inf}.
 
 The option variable @code{maxmin_effort} controls which simplification methods are 
 applied. Using the default value of @emph{twelve} for @code{maxmin_effort}, 
@@ -77,14 +77,14 @@ See also @mref{max}, @mrefdot{lmax}, and @mrefdot{lmin}.
 
 In the first example, setting @code{maxmin_effort} to zero suppresses simplifications.
 @example
-(%i1)	block([maxmin_effort : 0], max(1,2,x,x, min(a,b)));
+(%i1)	block([maxmin_effort : 0], min(1,2,x,x, min(a,b)));
 (%o1)	min(1,2,a,b,x,x)
 
 (%i2)	block([maxmin_effort : 1], min(1,2,x,x, min(a,b)));
 (%o2)	min(1,a,b,x)
 @end example
 
-When @code{maxmin_effort} is two or more, @code{max} compares pairs of members:
+When @code{maxmin_effort} is two or more, @code{min} compares pairs of members:
 @example
 (%i1)	block([maxmin_effort : 1], min(x,x+1,x+3));
 (%o1)	min(x,x+1,x+3)
@@ -93,13 +93,13 @@ When @code{maxmin_effort} is two or more, @code{max} compares pairs of members:
 (%o2)	x
 @end example
 
-Finally, when @code{maxmin_effort} is three or more, @code{max} compares triples 
+Finally, when @code{maxmin_effort} is three or more, @code{min} compares triples 
 members and excludes those that are in between; for example
 @example
 (%i1)	block([maxmin_effort : 4], min(x, 2*x, 3*x, 4*x));
 (%o1)	max(x,4*x)
 @end example
-
+Pl
 @opencatbox
 @category{Mathematical functions}
 @closecatbox
